@@ -36,7 +36,7 @@ sudo ./ccp-kernel/ccp_kernel_unload
 sudo sysctl -w net.ipv4.ip_forward=1
 
 echo 'Make ccp-kernel...'
-cd ccp-kernel && make >../tmp/build_tmp 2>../tmp/build_tmp
+cd ccp-kernel &&  rm -rf libccp && git clone git://github.com/ccp-project/libccp.git && make >../tmp/build_tmp 2>../tmp/build_tmp
 if [ $? -ne 0 ]; then
     cat ../"$2"/build_tmp
     exit 1
