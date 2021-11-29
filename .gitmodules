@@ -12,4 +12,4 @@
 	url = git://github.com/venkatarun95/ccp_copa.git
 [submodule "mahimahi"]
 	path = mahimahi
-	url = git://github.com/fcangialosi/mahimahi.git
+	url = git://github.com/ameya98/mahimahi.git
