@@ -46,7 +46,7 @@ trace_info = traceloader.read_trace_info()
 clear_folder(log_folder)
 
 print('Running iperf server...')
-iperf_server = subprocess.Popen(f'iperf -s -p {IPERF_PORT} >./{log_folder}/iperf_server.log',
+iperf_server = subprocess.Popen(f'iperf3 -s -p {IPERF_PORT} >./{log_folder}/iperf_server.log',
                                 shell=True,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
