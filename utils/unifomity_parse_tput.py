@@ -280,14 +280,21 @@ def plot_tput_delay(ccp_algs,
                 bbox_inches='tight')
                 plt.close()
                 stat=np.zeros((300,2,40), dtype=np.float)
-                ax = plt.subplots(figsize=(25, 14))
+                fig,ax = plt.subplots(figsize=(25, 14))
                 crh=0
                 for ccp in ccp_algs:
                   crh+=1
-                  loc=np.zeros((300,1), dtype=np.float)
+                  wnd=0.5
+                  loc=np.zeros((300,1), dtype=np.int)
                   for iter_num in range(iteration):                   
-                    for i in range(xmax):
-                      log_name = f'{ccp_alg}-{link_trace}-{packet_buffer}-{delay}-{delay_var}-{iter_num}-mahimahi.log'
+                    last=0
+                    log_name = f'{ccp_alg}-{link_trace}-{packet_buffer}-{delay}-{delay_var}-{iter_num}-mahimahi.log'
+                    try:
+                      xmax=len(mahimahi_results[log_name]['time_list'])
+                    except :
+                      continue
+                    for i in range(xmax-10):                     
+                      
                       a=int(mahimahi_results[log_name]['time_list'][i]/wnd+1)
                       if not (restrict(a,10.0/wnd,(20/wnd)+1) or restrict(a,(20.0/wnd),(6/wnd))):
                         if not(restrict(mahimahi_results[log_name]['tput_list'][i],b,12) and a< 20/wnd) :
@@ -295,7 +302,9 @@ def plot_tput_delay(ccp_algs,
                             continue
                       stat[a][0][loc[a][0]]+=mahimahi_results[log_name]['tput_list'][i]
                       stat[a][1][loc[a][0]]+=1
-                      loc[a][0]+=1   #相应区间的点的数量
+                      if last < a:
+                        loc[a][0]+=1   #相应区间的点的数量
+                        last=a
                   for a in range(XMAX):
                     for i in range(loc[a][0]+1):
                       if stat[a][1][i] !=0:
@@ -303,20 +312,20 @@ def plot_tput_delay(ccp_algs,
                     statplot=np.append(statplot,np.var(stat[a][0][0:loc[a][0]]))            
                   xticks=np.arange(XMAX)
                   if crh ==1 :
-                    ax.bar(xticks[1:81], statplot[1:81], width=0.25, label=f'{ccp}', color="blue")
+                    ax.bar(xticks[1:20], statplot[1:20], width=0.25, label=f'{ccp}', color="blue")
                   else :
-                    ax.bar(xticks[1:81]+0.25, statplot[1:81], width=0.25, label=f'{ccp}', color="red")
-                ax.set_xticks(xticks+0.125)
+                    ax.bar(xticks[1:20]+0.25, statplot[1:20], width=0.25, label=f'{ccp}', color="red")
+                ax.set_xticks(xticks[1:20]+0.125)
                 xticklabels=[]
                 for i in range(XMAX):
                   xticklabels.append(str(wnd*i)+"-"+str(wnd*i+wnd)+'s')
-                ax.set_xticklabels(xticklabels[0:80])    
+                ax.set_xticklabels(xticklabels[0:19])    
                 plt.xlabel('Time (s)', fontsize='12')
                 plt.ylabel('Varience', fontsize='12')
                 plt.legend()
                 plt.savefig(os.path.join(
                         fig_folder,
-                f'var-{link_trace}-{packet_buffer}-{delay}-{delay_var}-{iter_num}-mahimahi.png'
+                f'var-zero-{link_trace}-{packet_buffer}-{delay}-{delay_var}-{iter_num}-mahimahi.png'
                 ),
                 bbox_inches='tight')
                 plt.close()
