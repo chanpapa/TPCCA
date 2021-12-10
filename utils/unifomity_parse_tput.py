@@ -279,7 +279,7 @@ def plot_tput_delay(ccp_algs,
                 ),
                 bbox_inches='tight')
                 plt.close()
-                stat=np.zeros((300,2,40), dtype=np.float)
+                stat=np.zeros((300,2,200),type=np.float)
                 fig,ax = plt.subplots(figsize=(25, 14))
                 crh=0
                 for ccp in ccp_algs:
