@@ -213,12 +213,13 @@ def plot_tput_delay(ccp_algs,
                 delay_var = round(delay_var, 1)
                 plt.figure(figsize=(6.4,3))
                 count=0
-                statplot=np.array([])
                 XMAX=150
                 wnd=0.3
                 
                 for ccp_alg in ccp_algs:  
                     tl=np.zeros((300,2), dtype=np.float)
+                    tp1=np.zeros((iteration,int(duration/wnd)，2),dtype=np.float)
+                    #tp1记录相应iteration的相应区间的值
                     #定为0.5s大小
                     for iter_num in range(iteration):
                         xmax=0
@@ -232,19 +233,25 @@ def plot_tput_delay(ccp_algs,
                         b=link_trace[0:2]
                         b=float(b)                     
                         for i in range(xmax):
-                          a=int(mahimahi_results[log_name]['time_list'][i]/wnd+1)
-                          if restrict(a,10.0/wnd,(20/wnd)+1) or restrict(a,(20.0/wnd),(6/wnd)):
-                            tl[a][0]+=mahimahi_results[log_name]['tput_list'][i]
-                            tl[a][1]+=1
-                            continue
-                          if restrict(mahimahi_results[log_name]['tput_list'][i],b,12) and a< 20/wnd :
-                            tl[a][0]+=mahimahi_results[log_name]['tput_list'][i]
-                            tl[a][1]+=1
-                            continue
-                          if restrict(mahimahi_results[log_name]['tput_list'][i],2*b,15) and a< 40/wnd :
-                            tl[a][0]+=mahimahi_results[log_name]['tput_list'][i]
-                            tl[a][1]+=1  
-                            continue
+                            a=int(mahimahi_results[log_name]['time_list'][i]/wnd+1)
+                            if restrict(a,10.0/wnd,(6.0/wnd)+1) or restrict(a,(20.0/wnd),(6/wnd)):
+                                tl[a][0]+=mahimahi_results[log_name]['tput_list'][i]
+                                tl[a][1]+=1
+                                tpl[iter_num][a][0]+=mahimahi_results[log_name]['tput_list'][i]
+                                tpl[iter_num][a][1]+=1
+                                continue
+                            if restrict(mahimahi_results[log_name]['tput_list'][i],b,12) and a< 20/wnd :
+                                tl[a][0]+=mahimahi_results[log_name]['tput_list'][i]
+                                tl[a][1]+=1
+                                tpl[iter_num][a][0]+=mahimahi_results[log_name]['tput_list'][i]
+                                tpl[iter_num][a][1]+=1
+                                continue
+                            if restrict(mahimahi_results[log_name]['tput_list'][i],2*b,15) and a< 40/wnd :
+                                tl[a][0]+=mahimahi_results[log_name]['tput_list'][i]
+                                tl[a][1]+=1  
+                                tpl[iter_num][a][0]+=mahimahi_results[log_name]['tput_list'][i]
+                                tpl[iter_num][a][1]+=1
+                                continue
                             
                         '''for i in range(start,xmax):
                           print( mahimahi_results[log_name]['time_list'][i])
@@ -265,72 +272,96 @@ def plot_tput_delay(ccp_algs,
                     xl=np.zeros((600,),dtype=np.float)
                     yl=np.zeros((600,),dtype=np.float)
                     for i in range(len(tl)):
-                      if tl[i][1] != 0:                    
+                        if tl[i][1] != 0:                    
                         yl[i]=tl[i][0]/tl[i][1]
+                        for t in range(iteration):
+                            if tpl[t][i][1] !=0:
+                                tpl[t][i][0]=tpl[t][i][0]/tpl[t][i][1]              
+                    tlpercent5={}
+                    tlpercent25={}
+                    tlpercent75={}
+                    tlpercent95={}
+                    for i range(len(tl)):
+                        zq=np.zeros((iteration),dtype=np.float)
+                        for t in range(iteration):
+                            zq[t]=tpl[t][i][0]
+                        tlpercent5.append(np.percentile(zq,5))
+                        tlpercent25.append(np.percentile(zq,25))
+                        tlpercent75.append(np.percentile(zq,75)) 
+                        tlpercent95.append(np.percentile(zq,95)) 
                     for i in range(len(tl)):
-                      xl[i]=0.4*i
-                    plt.plot(xl[0:XMAX],yl[0:XMAX] , label =f'{ccp_alg}')
-                plt.xlabel('Time (s)', fontsize='12')
-                plt.ylabel('mean_Throughput (Mbps)', fontsize='12')
-                plt.legend()
-                plt.savefig(os.path.join(
+                        xl[i]=wnd*i
+                    plt.plot(xl[0:XMAX],yl[0:XMAX] , label =f'mean')
+                    plt.plot(xl[0:XMAX],tlpercent5[0:XMAX]) , label=f'5%')
+                    plt.plot(xl[0:XMAX],tlpercent25[0:XMAX]) , label=f'25%')
+                    plt.plot(xl[0:XMAX],tlpercent75[0:XMAX]) , label=f'75%')
+                    plt.plot(xl[0:XMAX],tlpercent95[0:XMAX]) , label=f'95%')
+                    plt.xlabel('Time (s)', fontsize='12')
+                    plt.ylabel('Throughput (Mbps)', fontsize='12')
+                    plt.legend()
+                    plt.savefig(os.path.join(
                         fig_folder,
-                f'mean-{link_trace}-{packet_buffer}-{delay}-{delay_var}-{iter_num}-mahimahi.png'
-                ),
-                bbox_inches='tight')
-                plt.close()
-                stat=np.zeros((300,2,200),type=np.float)
+                    f'uniformity-{ccp_alg}-{link_trace}-{packet_buffer}-{delay}-{delay_var}-{iter_num}-mahimahi.png'
+                    ),
+                    bbox_inches='tight')
+                    plt.close()
+               #plot varience figure
+               '''
                 fig,ax = plt.subplots(figsize=(25, 14))
+                ax.legend()
                 crh=0
                 for ccp in ccp_algs:
-                  crh+=1
-                  wnd=0.5
-                  loc=np.zeros((300,1), dtype=np.int)
-                  for iter_num in range(iteration):                   
-                    last=0
-                    log_name = f'{ccp_alg}-{link_trace}-{packet_buffer}-{delay}-{delay_var}-{iter_num}-mahimahi.log'
-                    try:
-                      xmax=len(mahimahi_results[log_name]['time_list'])
-                    except :
-                      continue
-                    for i in range(xmax-10):                     
-                      
-                      a=int(mahimahi_results[log_name]['time_list'][i]/wnd+1)
-                      if not (restrict(a,10.0/wnd,(20/wnd)+1) or restrict(a,(20.0/wnd),(6/wnd))):
-                        if not(restrict(mahimahi_results[log_name]['tput_list'][i],b,12) and a< 20/wnd) :
-                          if not(restrict(mahimahi_results[log_name]['tput_list'][i],2*b,15) and a< 40/wnd) :
+                    crh+=1
+                    stat=np.zeros((350,2,150), dtype=np.float)
+                    statplot=np.array([])
+                    wnd=0.5
+                    loc=np.zeros((300,1), dtype=np.int)
+                    for iter_num in range(iteration):                   
+                        last=0
+                        log_name = f'{ccp}-{link_trace}-{packet_buffer}-{delay}-{delay_var}-{iter_num}-mahimahi.log'
+                        try:
+                            xmax=len(mahimahi_results[log_name]['time_list'])
+                            print('wrong')
+                        except :
                             continue
-                      stat[a][0][loc[a][0]]+=mahimahi_results[log_name]['tput_list'][i]
-                      stat[a][1][loc[a][0]]+=1
-                      if last < a:
-                        loc[a][0]+=1   #相应区间的点的数量
-                        last=a
-                  for a in range(XMAX):
-                    for i in range(loc[a][0]+1):
-                      if stat[a][1][i] !=0:
-                        stat[a][0][i]=stat[a][0][i]/stat[a][1][i]
-                    statplot=np.append(statplot,np.var(stat[a][0][0:loc[a][0]]))            
-                  xticks=np.arange(XMAX)
-                  if crh ==1 :
-                    ax.bar(xticks[1:20], statplot[1:20], width=0.25, label=f'{ccp}', color="blue")
-                  else :
-                    ax.bar(xticks[1:20]+0.25, statplot[1:20], width=0.25, label=f'{ccp}', color="red")
-                ax.set_xticks(xticks[1:20]+0.125)
-                xticklabels=[]
+                        for i in range(xmax-10):                     
+                            a=int(mahimahi_results[log_name]['time_list'][i]/wnd+1)
+                            if not (restrict(a,10.0/wnd,(6.0/wnd)+1) or restrict(a,(20.0/wnd),(10.0/wnd))):
+                            if not(restrict(mahimahi_results[log_name]['tput_list'][i],b,12) and a< 20/wnd) :
+                            if not(restrict(mahimahi_results[log_name]['tput_list'][i],2*b,30) and a< 40/wnd) :
+                                continue
+                            stat[a][0][loc[a][0]]+=mahimahi_results[log_name]['tput_list'][i]
+                            stat[a][1][loc[a][0]]+=1
+                            if last < a:
+                                loc[a][0]+=1   #相应区间的点的数量
+                                last=a
+                        for a in range(XMAX):
+                            for i in range(loc[a][0]+1):
+                                if stat[a][1][i] !=0:
+                                stat[a][0][i]=stat[a][0][i]/stat[a][1][i]
+                                statplot=np.append(statplot,np.var(stat[a][0][0:loc[a][0]]))            
+                        xticks=np.arange(XMAX)
+                        if crh ==1 :
+                            ax.bar(xticks[40:60], statplot[40:60], width=0.25, label=f'{ccp}', color="blue")
+                        else :
+                            ax.bar(xticks[40:60]+0.25, statplot[40:60], width=0.25, label=f'{ccp}', color="red")
+                            ax.set_xticks(xticks[40:60]+0.125)
+                        xticklabels=[]
                 for i in range(XMAX):
                   xticklabels.append(str(wnd*i)+"-"+str(wnd*i+wnd)+'s')
-                ax.set_xticklabels(xticklabels[0:19])    
+                ax.set_xticklabels(xticklabels[39:59])    
                 plt.xlabel('Time (s)', fontsize='12')
                 plt.ylabel('Varience', fontsize='12')
                 plt.legend()
                 plt.savefig(os.path.join(
                         fig_folder,
-                f'var-zero-{link_trace}-{packet_buffer}-{delay}-{delay_var}-{iter_num}-mahimahi.png'
+                f'var-nonzero-{link_trace}-{packet_buffer}-{delay}-{delay_var}-{iter_num}-mahimahi.png'
                 ),
                 bbox_inches='tight')
                 plt.close()
                       
-    pbar.close()
+    pbar.close()'''
+    '''
     if iteration > 1 and enable_iteration_plot:
         pbar = tqdm(total=len(packet_buffer_list) * len(trace_info) *
                     len(delay_list) * iteration)
@@ -358,4 +389,4 @@ def plot_tput_delay(ccp_algs,
                                     bbox_inches='tight')
                         plt.close()
                         pbar.update(1)
-        pbar.close()
+        pbar.close()'''
