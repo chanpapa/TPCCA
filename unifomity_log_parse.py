@@ -19,7 +19,7 @@ iteration = configs['data']['iteration']
 name_map = configs['data']['plot_name_map']
 ccp_algs = configs['data']['ccp_algs']
 
-log_folder = configs['path']['log_folder']
+log_folder = configs['unipath']['log_folder']
 fig_folder = configs['unipath']['fig_folder']
 trace_folder = configs['path']['trace_folder']
 ccp_fig_folder = configs['unipath']['ccp_fig_folder']
