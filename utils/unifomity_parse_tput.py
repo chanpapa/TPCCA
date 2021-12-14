@@ -214,13 +214,11 @@ def plot_tput_delay(ccp_algs,
                 plt.figure(figsize=(6.4,3))
                 count=0
                 XMAX=150
-                wnd=0.3
+                wnd=0.25
                 
                 for ccp_alg in ccp_algs:  
                     tl=np.zeros((300,2), dtype=np.float)
-                    tp1=np.zeros((iteration,int(duration/wnd)，2),dtype=np.float)
-                    #tp1记录相应iteration的相应区间的值
-                    #定为0.5s大小
+                    tpl=np.zeros((iteration,int(65/wnd),2,),dtype=np.float)
                     for iter_num in range(iteration):
                         xmax=0
                         log_name = f'{ccp_alg}-{link_trace}-{packet_buffer}-{delay}-{delay_var}-{iter_num}-mahimahi.log'
@@ -234,19 +232,25 @@ def plot_tput_delay(ccp_algs,
                         b=float(b)                     
                         for i in range(xmax):
                             a=int(mahimahi_results[log_name]['time_list'][i]/wnd+1)
-                            if restrict(a,10.0/wnd,(6.0/wnd)+1) or restrict(a,(20.0/wnd),(6/wnd)):
+                            if a < 6.0/wnd:
                                 tl[a][0]+=mahimahi_results[log_name]['tput_list'][i]
                                 tl[a][1]+=1
                                 tpl[iter_num][a][0]+=mahimahi_results[log_name]['tput_list'][i]
                                 tpl[iter_num][a][1]+=1
                                 continue
-                            if restrict(mahimahi_results[log_name]['tput_list'][i],b,12) and a< 20/wnd :
+                            if restrict(a,10.0/wnd,(6.0/wnd)+1) or restrict(a,(20.0/wnd),(7/wnd)):
                                 tl[a][0]+=mahimahi_results[log_name]['tput_list'][i]
                                 tl[a][1]+=1
                                 tpl[iter_num][a][0]+=mahimahi_results[log_name]['tput_list'][i]
                                 tpl[iter_num][a][1]+=1
                                 continue
-                            if restrict(mahimahi_results[log_name]['tput_list'][i],2*b,15) and a< 40/wnd :
+                            if restrict(mahimahi_results[log_name]['tput_list'][i],b,15) and a< 20/wnd :
+                                tl[a][0]+=mahimahi_results[log_name]['tput_list'][i]
+                                tl[a][1]+=1
+                                tpl[iter_num][a][0]+=mahimahi_results[log_name]['tput_list'][i]
+                                tpl[iter_num][a][1]+=1
+                                continue
+                            if mahimahi_results[log_name]['tput_list'][i] >b and a< 50/wnd :
                                 tl[a][0]+=mahimahi_results[log_name]['tput_list'][i]
                                 tl[a][1]+=1  
                                 tpl[iter_num][a][0]+=mahimahi_results[log_name]['tput_list'][i]
@@ -271,31 +275,32 @@ def plot_tput_delay(ccp_algs,
                     plt.close()'''
                     xl=np.zeros((600,),dtype=np.float)
                     yl=np.zeros((600,),dtype=np.float)
-                    for i in range(len(tl)):
+                    for i in range(int(64/wnd)):
                         if tl[i][1] != 0:                    
-                        yl[i]=tl[i][0]/tl[i][1]
+                            yl[i]=tl[i][0]/tl[i][1]
                         for t in range(iteration):
                             if tpl[t][i][1] !=0:
                                 tpl[t][i][0]=tpl[t][i][0]/tpl[t][i][1]              
-                    tlpercent5={}
-                    tlpercent25={}
-                    tlpercent75={}
-                    tlpercent95={}
-                    for i range(len(tl)):
+                    tlpercent15=[]
+                    tlpercent25=[]
+                    tlpercent75=[]
+                    tlpercent95=[]
+                    for i in range(int(63/wnd)):
                         zq=np.zeros((iteration),dtype=np.float)
                         for t in range(iteration):
                             zq[t]=tpl[t][i][0]
-                        tlpercent5.append(np.percentile(zq,5))
+                        tlpercent15.append(np.percentile(zq,15))
                         tlpercent25.append(np.percentile(zq,25))
                         tlpercent75.append(np.percentile(zq,75)) 
                         tlpercent95.append(np.percentile(zq,95)) 
                     for i in range(len(tl)):
                         xl[i]=wnd*i
+                    XMAX=int(50/wnd)    
                     plt.plot(xl[0:XMAX],yl[0:XMAX] , label =f'mean')
-                    plt.plot(xl[0:XMAX],tlpercent5[0:XMAX]) , label=f'5%')
-                    plt.plot(xl[0:XMAX],tlpercent25[0:XMAX]) , label=f'25%')
-                    plt.plot(xl[0:XMAX],tlpercent75[0:XMAX]) , label=f'75%')
-                    plt.plot(xl[0:XMAX],tlpercent95[0:XMAX]) , label=f'95%')
+                    plt.plot(xl[0:XMAX],tlpercent15[0:XMAX], label=f'15%')
+                    plt.plot(xl[0:XMAX],tlpercent25[0:XMAX] , label=f'25%')
+                    plt.plot(xl[0:XMAX],tlpercent75[0:XMAX] , label=f'75%')
+                    plt.plot(xl[0:XMAX],tlpercent95[0:XMAX] , label=f'95%')
                     plt.xlabel('Time (s)', fontsize='12')
                     plt.ylabel('Throughput (Mbps)', fontsize='12')
                     plt.legend()
@@ -305,8 +310,10 @@ def plot_tput_delay(ccp_algs,
                     ),
                     bbox_inches='tight')
                     plt.close()
+                    pbar.update(1)
+    pbar.close()
                #plot varience figure
-               '''
+'''
                 fig,ax = plt.subplots(figsize=(25, 14))
                 ax.legend()
                 crh=0
@@ -360,8 +367,7 @@ def plot_tput_delay(ccp_algs,
                 bbox_inches='tight')
                 plt.close()
                       
-    pbar.close()'''
-    '''
+    pbar.close()
     if iteration > 1 and enable_iteration_plot:
         pbar = tqdm(total=len(packet_buffer_list) * len(trace_info) *
                     len(delay_list) * iteration)
@@ -389,4 +395,5 @@ def plot_tput_delay(ccp_algs,
                                     bbox_inches='tight')
                         plt.close()
                         pbar.update(1)
-        pbar.close()'''
+        pbar.close()
+'''
