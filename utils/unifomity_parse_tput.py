@@ -217,9 +217,8 @@ def plot_tput_delay(ccp_algs,
                 delay_var = round(delay_var, 1)
                 plt.figure(figsize=(6.4, 3))
                 count = 0
-                XMAX = 150
+                XMAX = int(53/tputwnd)
                 wnd = 0.25
-                
                 for ccp_alg in ccp_algs:
                
                     tl = np.zeros((300, 2), dtype=np.float)
@@ -232,7 +231,7 @@ def plot_tput_delay(ccp_algs,
                         time_list=[]
                         for line in lines:
                             a=float(line)/1000/1000
-                            if count >=XMAX:
+                            if count >XMAX:
                                 break
                             tput_list.append(a)
                             time_list.append((count+1)*tputwnd)
@@ -240,7 +239,7 @@ def plot_tput_delay(ccp_algs,
                         start = 0
                         b = re.findall(r'\d+', link_trace)
                         b = float(b[0])
-                        for i in range(xmax):
+                        for i in range(count-2):
                             a = int(time_list[i] / wnd)
                             if a < 6.0 / wnd:
                                 tl[a][0] += tput_list[i]
@@ -278,7 +277,7 @@ def plot_tput_delay(ccp_algs,
                     tlpercent25 = []
                     tlpercent75 = []
                     tlpercent95 = []
-                    for i in range(int(63 / wnd)):
+                    for i in range(int(53 / wnd)):
                         zq = np.zeros((iteration), dtype=np.float)
                         for t in range(iteration):
                             zq[t] = tpl[t][i][0]
@@ -305,10 +304,11 @@ def plot_tput_delay(ccp_algs,
                     plt.close()
                     
                 # RTT uniformity
-                rtt_wnd = 0.2
+                rttwnd = 0.2
                 for ccp_alg in ccp_algs:
                     tl = np.zeros((300, 2), dtype=np.float)
-                    rpl = np.zeros((iteration, int(50 / wnd),), dtype=np.float)
+                    rpl = np.zeros((iteration, int(60 /rttwnd),), dtype=np.float)
+                    iterseq=0
                     for iter_num in range(iteration):
                         xmax = 0
                         time_list = []
@@ -320,6 +320,7 @@ def plot_tput_delay(ccp_algs,
                         avg_rtt = np.array([])
                         if not os.access(f'./{log_folder}/{ccp_alg}-{link_trace}-{packet_buffer}-{delay}-{delay_var}-{iter_num}-rtt.txt', os.F_OK):
                             continue
+                        iterseq+=1
                         lines = open(
                             f'./{log_folder}/{ccp_alg}-{link_trace}-{packet_buffer}-{delay}-{delay_var}-{iter_num}-rtt.txt',
                             'r').readlines()
@@ -331,35 +332,37 @@ def plot_tput_delay(ccp_algs,
                             if len(time_wnd) == 0:
                                 time_wnd = np.append(time_wnd, time)
                                 rtt_wnd = np.append(rtt_wnd, rtt)
-                            if time - time_wnd[0] < rtt_wnd:
+                                continue
+                            if int(time/rttwnd)==int(time_wnd[0]/rttwnd): #在同一个区间
                                 time_wnd = np.append(time_wnd, time)
                                 rtt_wnd = np.append(rtt_wnd, rtt)
                                 continue
-                            time_list.append(np.mean(time_wnd))
+                            time_list.append((int(time_wnd[0]/rttwnd)+1)*rttwnd)
                             rtt_list.append(np.mean(rtt))
                             time_wnd = np.array([])
                             rtt_wnd = np.array([])
                             time_wnd = np.append(time_wnd, time)
                             rtt_wnd = np.append(rtt_wnd, rtt)
-                        for j in range(int(50 / rtt_wnd)):
-                            rpl[iter_num][j] = rtt_list[j]
+                        for j in range(len(time_list)):
+                            rpl[iterseq-1][j] = rtt_list[j]
                     xl = np.zeros((600,), dtype=np.float)
                     yl = np.zeros((600,), dtype=np.float)
                     tlpercent15 = []
                     tlpercent25 = []
                     tlpercent75 = []
                     tlpercent95 = []
-                    for i in range(int(53 / rtt_wnd)):
+                    mymax=len(rtt_list)-5
+                    for i in range(mymax):
                         zq = np.zeros((iteration), dtype=np.float)
-                        for t in range(iteration):
+                        for t in range(iterseq):
                             zq[t] = rpl[t][i]
                         tlpercent15.append(np.percentile(zq, 15))
                         tlpercent25.append(np.percentile(zq, 25))
                         tlpercent75.append(np.percentile(zq, 75))
                         tlpercent95.append(np.percentile(zq, 95))
                     for i in range(len(tl)):
-                        xl[i] = wnd * i
-                    XMAX = int(50 / wnd)
+                        xl[i] = rttwnd * i
+                    XMAX = int(mymax-1)
                     plt.plot(xl[0:XMAX], yl[0:XMAX], label=f'mean')
                     plt.plot(xl[0:XMAX], tlpercent15[0:XMAX], label=f'15%')
                     plt.plot(xl[0:XMAX], tlpercent25[0:XMAX], label=f'25%')
