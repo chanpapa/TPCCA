@@ -220,11 +220,13 @@ def plot_tput_delay(ccp_algs,
                 XMAX = int(53/tputwnd)
                 wnd = 0.25
                 for ccp_alg in ccp_algs:
-               
                     tl = np.zeros((300, 2), dtype=np.float)
                     tpl = np.zeros((iteration, int(65 / wnd), 2,), dtype=np.float)
-                    for iter_num in range(iteration):
+                    iter_num=0
+                    for iter_num1 in range(iteration):
                         xmax = int(52/tputwnd)
+                        if not os.access(f'./{log_folder}/{ccp_alg}-{link_trace}-{packet_buffer}-{delay}-{delay_var}-{iter_num}-tput.txt', os.F_OK):
+                            continue
                         lines = open(f'./{log_folder}/{ccp_alg}-{link_trace}-{packet_buffer}-{delay}-{delay_var}-{iter_num}-tput.txt', 'r').readlines()
                         count=0
                         tput_list=[]
@@ -356,6 +358,7 @@ def plot_tput_delay(ccp_algs,
                         zq = np.zeros((iteration), dtype=np.float)
                         for t in range(iterseq):
                             zq[t] = rpl[t][i]
+                        yl[i]=np.mean(zq)    
                         tlpercent15.append(np.percentile(zq, 15))
                         tlpercent25.append(np.percentile(zq, 25))
                         tlpercent75.append(np.percentile(zq, 75))
